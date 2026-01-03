@@ -77,7 +77,7 @@ else:
 
 
 debug_exports = False 
-debug_trace = False
+debug_trace = True
 
 def debugprint(info):
     if debug_trace:
@@ -114,8 +114,10 @@ else:
 
 if 'HS_' in plate_style:
     symmetry = "asymmetric"
-    plate_file = path.join(parts_path, r"hot_swap_plate")
-    plate_offset = 0.0
+    # Only set default hot swap plate if no custom plate_file is specified
+    if plate_file is None or plate_file == "None":
+        plate_file = path.join(parts_path, r"hot_swap_plate")
+        plate_offset = 0.0
 
 if (trackball_in_wall or ('TRACKBALL' in thumb_style)) and not ball_side == 'both':
     symmetry = "asymmetric"
@@ -175,7 +177,7 @@ def column_offset(column: int) -> list:
 
 
 def single_plate(cylinder_segments=100, side="right"):
-
+    print(f"DEBUG: single_plate called. plate_style={plate_style}")
     if plate_style in ['NUB', 'HS_NUB']:
         tb_border = (mount_height-keyswitch_height)/2
         top_wall = box(mount_width, tb_border, plate_thickness)
@@ -241,9 +243,14 @@ def single_plate(cylinder_segments=100, side="right"):
         plate = difference(plate, [undercut])
 
     if plate_file is not None:
+        file = plate_file
+        print(f"DEBUG: plate_file={file}")
+
         socket = import_file(plate_file)
+       
         socket = translate(socket, [0, 0, plate_thickness + plate_offset])
-        plate = union([plate, socket])
+        plate = socket
+
 
 
     if plate_holes:
@@ -254,19 +261,12 @@ def single_plate(cylinder_segments=100, side="right"):
         holes = [
             translate(
                 cylinder(radius=plate_holes_diameter/2, height=plate_holes_depth+.01),
-                (x_off+half_width, y_off+half_height, plate_holes_depth/2-.01)
+                (half_width + x_off ,half_height - y_off, 5)
             ),
+
             translate(
-                cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
-                (x_off-half_width, y_off+half_height, plate_holes_depth/2-.01)
-            ),
-            translate(
-                cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
-                (x_off-half_width, y_off-half_height, plate_holes_depth/2-.01)
-            ),
-            translate(
-                cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
-                (x_off+half_width, y_off-half_height, plate_holes_depth/2-.01)
+                cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.06),
+                (-half_width - x_off, half_height - y_off,5)
             ),
         ]
         plate = difference(plate, holes)
@@ -4310,6 +4310,8 @@ def run():
     mod_r, tmb_r = model_side(side="right")
     export_file(shape=mod_r, fname=path.join(save_path, config_name + r"_right"))
     export_file(shape=tmb_r, fname=path.join(save_path, config_name + r"_thumb_right"))
+    
+    export_file(shape=key_place(single_plate(side="right"), centercol, centerrow), fname=path.join(save_path, config_name + r"_single_switch_test"))
 
     #base = baseplate(mod_r, tmb_r, side='right')
     base = baseplate(side='right')

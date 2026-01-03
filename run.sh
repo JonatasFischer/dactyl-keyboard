@@ -112,13 +112,8 @@ if [[ ! -z $CONFIG ]]; then
 fi
 
 # run the command in a temporary container
-docker run --name dm-run -d --rm -v "`pwd`/src:/app/src" -v "`pwd`/things:/app/things" -v "`pwd`/configs:/app/configs" ${IMAGE_TAG} python3 $SCRIPT $CONFIG_OPTION > /dev/null 2>&1
-
-# show progress indicator while until dm-run container completes
-while $(docker inspect --format={{.Id}} dm-run > /dev/null 2>&1); do
-    echo -n "."
-    sleep 1.5
-done
+# Removed -d to show output in foreground
+docker run --name dm-run --rm -v "`pwd`/src:/app/src" -v "`pwd`/things:/app/things" -v "`pwd`/configs:/app/configs" ${IMAGE_TAG} python3 $SCRIPT $CONFIG_OPTION
 
 echo ""
 echo "Dactyl-Manuform '${COMMAND}' is complete!"
