@@ -236,13 +236,13 @@ def single_plate(cylinder_segments=100, side="right"):
             #    )
             #])
 
-        undercut = translate(undercut, (0.0, 0.0, -clip_thickness + mount_thickness / 2.0))
+        undercut = translate(undercut, (0.0, 0.0, (-clip_thickness + mount_thickness) / 2.0))
 
         if ENGINE=='cadquery' and undercut_transition > 0:
             undercut = undercut.faces("+Z").chamfer(undercut_transition, clip_undercut)
 
         plate = difference(plate, [undercut])
-        ###tentando adicionar o dent
+        # tentando adicionar o dent
         rotation = 20
         dent1 = box(3.5,2.5,3.5)
         dent2 = box(3.5,2.5,3.5)
@@ -251,22 +251,19 @@ def single_plate(cylinder_segments=100, side="right"):
         
         cutter_dent1 = box(4,6,6)
         cutter_dent2 = box(4,6,6)
-        cutter_offset = .8
+        cutter_offset = .7
         cutter_dent1 = translate(cutter_dent1, (cutter_offset, 0, 0))    
         cutter_dent2 = translate(cutter_dent2, (-cutter_offset, 0, 0))  
         
         dent1 = difference(dent1, [cutter_dent1])    
-        dent2 = difference(dent2, [cutter_dent2])   
-        
-        dent_offset_x = (keyswitch_width/2) + 1
-        dent1 = translate(dent1, (dent_offset_x, 0, (-clip_thickness + mount_thickness / 2.0) + 1.5))
-        dent2 = translate(dent2, ((-dent_offset_x), 0, (-clip_thickness + mount_thickness / 2.0) +1.5))
+        dent2 = difference(dent2, [cutter_dent2])
 
-        
-        
+        dent_offset_x = (keyswitch_width/2) + (2 - cutter_offset)
+        dent1 = translate(dent1, (dent_offset_x, 0, (-clip_thickness + mount_thickness / 2.0) + 1.6))
+        dent2 = translate(dent2, ((-dent_offset_x), 0, (-clip_thickness + mount_thickness / 2.0) +1.6))
         plate = union([plate,dent1,dent2])
         
-        ##fim da criacao do dent
+        # fim da criacao do dent
 
     if plate_file is not None:
         socket = import_file(plate_file)
@@ -296,8 +293,22 @@ def single_plate(cylinder_segments=100, side="right"):
                 cylinder(radius=plate_holes_diameter / 2, height=plate_holes_depth+.01),
                 (x_off+half_width, y_off-half_height, plate_holes_depth/2-.01)
             ),
+
+
         ]
         plate = difference(plate, holes)
+        plate = difference(plate, [
+        #hole do amoeba
+                    translate(
+                        cylinder(radius=1, height=4),
+                        (x_off+half_width + 2.2, -.8, 2)
+                    ),
+                    #hole do amoeba
+                    translate(
+                        cylinder(radius=1, height=4),
+                        (x_off-half_width - 2.2, -.8 , 2)
+                    ),
+        ])
 
     if side == "left":
         plate = mirror(plate, 'YZ')
