@@ -242,6 +242,31 @@ def single_plate(cylinder_segments=100, side="right"):
             undercut = undercut.faces("+Z").chamfer(undercut_transition, clip_undercut)
 
         plate = difference(plate, [undercut])
+        ###tentando adicionar o dent
+        rotation = 20
+        dent1 = box(3.5,2.5,3.5)
+        dent2 = box(3.5,2.5,3.5)
+        dent1 = rotate(dent1, (0, rotation, 0))    
+        dent2 = rotate(dent2, (0, -rotation, 0))    
+        
+        cutter_dent1 = box(4,6,6)
+        cutter_dent2 = box(4,6,6)
+        cutter_offset = .8
+        cutter_dent1 = translate(cutter_dent1, (cutter_offset, 0, 0))    
+        cutter_dent2 = translate(cutter_dent2, (-cutter_offset, 0, 0))  
+        
+        dent1 = difference(dent1, [cutter_dent1])    
+        dent2 = difference(dent2, [cutter_dent2])   
+        
+        dent_offset_x = (keyswitch_width/2) + 1
+        dent1 = translate(dent1, (dent_offset_x, 0, (-clip_thickness + mount_thickness / 2.0) + 1.5))
+        dent2 = translate(dent2, ((-dent_offset_x), 0, (-clip_thickness + mount_thickness / 2.0) +1.5))
+
+        
+        
+        plate = union([plate,dent1,dent2])
+        
+        ##fim da criacao do dent
 
     if plate_file is not None:
         socket = import_file(plate_file)
